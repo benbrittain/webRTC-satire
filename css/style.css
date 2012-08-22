@@ -1,0 +1,26 @@
+
+#videos {
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background-color: #F0F6FB;
+}
+
+#messages {
+  overflow: scroll;
+  height: 100px;
+  width: 100%;
+  background-color: white;
+  border-radius: 8px;
+  border-style:solid;
+  border-width:1px;
+}
+
+.flip {
+-webkit-transform: rotateY(180deg);
+}
+
+.hiddenVideo {
+    display: none;
+}

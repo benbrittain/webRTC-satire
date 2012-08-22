@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Bootstrap, from Twitter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <script src="/js/jquery.js"></script>
+    <script type="text/javascript">
+        function S4() {
+              return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+        }
+        $(document).ready(function(){
+            $('#tryit').click(function() {
+                window.location =  "p2p.html/#" + S4();
+            });
+        });
+    </script>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">A Modest Proposal for in-browser p2p data connections</a>
+          <div class="nav-collapse">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="hero-unit">
+        <h1>webRTC</h1>
+        <p>Up until now, the webRTC protocol has only been able to send video streams. Using a combination of cutting edge technologies in conjunction with a smartphone, we can now send data using a secure peer-to-peer connection </p> 
+        <p><a id="tryit" class="btn btn-primary btn-large">Try it&raquo;</a></p>
+      </div>
+
+      <hr>
+
+      <footer>
+      <p>p2p video connections established using <a href='http://github.com/webRTC/webRTC.io'>webRTC.io</a></p>
+      <p>developed in good spirit at <a href="http://hackerschool.com">Hacker School</a> by <a href="https://github.com/dennismartensson">Dennis Mårtensson</a> & <a href=https://github.com/cavedweller>Ben Brittain</a></p>
+      </footer>
+
+    </div> 
+
+  </head>
+
+  </body>
+</html>
+

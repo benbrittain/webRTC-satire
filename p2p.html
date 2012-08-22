@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Bootstrap, from Twitter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="/css/bootstrap.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <script src="/webrtc.io.js"></script>
+    <script src="/js/qr.js"></script>
+    <script src="/js/jquery.js"></script>
+    <script src="/js/jquery.qrcode.min.js"></script>
+    <script type="text/javascript">
+        function S4() {
+              return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+        }
+      var PeerConnection = window.PeerConnection || window.webkitPeerConnection00;
+
+      var state;
+      var peer = false;
+      var gCanvas;
+      var gCtx;
+      var imageData;
+      var v;
+        var msgNum = 0;
+        var ack = 0;
+        var prior = 0;
+        var mostRecentMsg = "";
+        var timer;
+        $(document).ready(function(){
+            $('#tryit').click(function() {
+                window.location =  this.id;
+            });
+            $('#atext').keypress(function(e) {
+                if (e.which == 13){
+                    $('#submit').trigger('click');
+                }
+            });
+            $('#submit').click(function() {
+                $("#printqrcode").html("");
+                msgNum = S4();
+                var atext = JSON.stringify({"id": msgNum,
+                                            "ack": ack, 
+                                            "ack2": ack, 
+                                            "b": $('#atext').val(),
+                                            "b2": $('#atext').val()
+                                           });
+                $('#printqrcode').qrcode({width: 300, height: 300, text: atext});
+          $("#alert").text("look at that pretty QR code!").delay("1500");
+          $("#alert").fadeOut(function() {
+                $(this).text("take a picture!").fadeIn().delay("2000");
+                $("#alert").fadeOut(function() {
+                     $(this).text("That's right. You read that properly. Take out that smartphone and take a nice picture of that QR code.").fadeIn().delay("5000");
+                     $("#alert").fadeOut(function() {
+                         $(this).text("Flip the smartphone around and show the QR code to the webcam! This is crazy advanced technology. We'll wait for you. :)").fadeIn().delay("5000");
+                     });      
+                });
+          });
+
+            });
+        });
+
+
+      function sanitize(msg) {
+        return msg.replace(/</g, '&lt;');
+      }
+      function addToDataChannel(result) {
+            var frame = JSON.parse(result);
+            if (frame.ack === frame.ack2 && frame.b === frame.b2) {
+            if (frame.id == msgNum && prior != frame.id){
+                if (mostRecentMsg !== frame.b){
+                    mostRecentMsg = frame.b;
+                    var messages = $("#datachannel");
+                    msg = sanitize(frame.b);
+                    msg = '<span id='+ msgNum +' style="color:#FF0000;" padding-left: 15px">' + msg + '</span><br>';
+                    messages.append(msg);
+                    messages.scrollTop = 10000;
+                    prior = frame.id;
+                    $("#alert").fadeOut(function() {
+                        $(this).text("Keep holding the smartphone to the webcam.").fadeIn().delay("5000");
+                            $("#alert").fadeOut(function() {
+                                $(this).text("The Red means that a transmission MIGHT have been sent. Verification is difficult... gotta wait for a message back").fadeIn();
+                        });
+                    });
+                }
+            } else if (frame.ack == msgNum){
+                if (mostRecentMsg != frame.b){
+                    mostRecentMsg = frame.b;
+                    ack = frame.id;
+                    var messages = $("#datachannel");
+                    $("#"+msgNum).attr("style", "color:#00FF00");
+                    msg = sanitize(frame.b);
+                    msg = '<span id='+ frame.id +' style:"color:#FFF" padding-left: 15px">' + msg + '</span><br>';
+                    messages.append(msg);
+                    messages.scrollTop = 10000;
+                    $("#alert").fadeOut(function() {
+                        $(this).text("Woah! you got a message!").fadeIn().delay("10000");
+                            $("#alert").fadeOut(function() {
+                                $(this).text("You need to send a response now! QR code... picture... hold phone... you get the idea").fadeIn().delay("10000");
+                        });
+                    });
+                }
+            }
+            } else {
+                console.log("corrupted data, resending");
+            }
+        }
+      function initCanvas(idOfVideo) {
+        gCanvas = document.getElementById("qr-canvas");
+        v = document.getElementById(idOfVideo);
+        var aspectRatio = v.videoHeight/v.videoWidth;
+        var w = v.width * aspectRatio;
+        var h = v.height * aspectRatio;
+        gCtx = gCanvas.getContext("2d");
+        gCtx.clearRect(0, 0, w, h);
+        imageData = gCtx.getImageData(0, 0, 320, 240);
+        qrcode.callback = function(result) {
+            addToDataChannel(result);
+        }
+        captureToCanvas();
+      }
+        var toggle = true;
+      function captureToCanvas() {
+        if (toggle) {
+            v = document.getElementById("remote");
+            toggle = false;
+        } else {
+            v = document.getElementById("you");
+            toggle = true;
+        }
+        try {
+          gCtx.drawImage(v, 0, 0);
+          qrcode.decode();
+        } catch (e) {
+          console.log(e);
+        };
+          timer = setTimeout(captureToCanvas, 200);
+      }
+      function cloneVideo(domId, socketId) {
+        var video = document.getElementById(domId);
+        var clone = video.cloneNode(false);
+        clone.id = "remote";
+        document.getElementById('videos').appendChild(clone);
+        return clone;
+      }
+
+    </script>
+  </head>
+
+  <body onload="init()">
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/">A Modest Proposal for in-browser p2p data connections</a>
+          <div class="nav-collapse">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+        <div id ="alertDiv" class="row">
+            <div id="alert" class="alert alert-info">Welcome! To start sending messages, please connect to another person! (or open another window) </div>
+        </div>
+        <div class="row">
+            <div class="span12">
+                <div class="row">
+                    <div class="span6">
+                        <div class="well">
+                            <video id="you" class="flip" autoplay=""  width="400" height="400"></video>
+                        </div>
+                   </div>
+                    <div class="span6">
+                        <div class="well">
+                            <div id="printqrcode">
+                            </div>
+                            <br>
+                              <input type="text" class="span3" id="atext" placeholder="What do you want to send?">
+                                <br>
+                                <br>
+                              <button type="submit" id="submit" class="btn">Submit</button>
+                        </div>
+                   </div>
+               </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="span12">
+                <div class="well">
+                    <div id="datachannel">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+      function init() {
+        if(PeerConnection){
+          rtc.createStream({"video": true, "audio": false}, function(stream) {
+            document.getElementById('you').src = URL.createObjectURL(stream);
+            rtc.attachStream(stream, 'you');
+          });
+        }else {
+          alert('Your browser is not supported or you have to turn on flags. In chrome you go to chrome://flags and turn on Enable PeerConnection remember to restart chrome');
+        }
+
+        var room = window.location.hash.slice(1);
+        //When using localhost
+        rtc.connect("ws://10.242.11.187:8000/", room);
+          var messages = $("#datachannel");
+          msg = '<span style="color:#0000FF;" padding-left: 15px"> \> If you would like to skip all this, go directly to the <a href="http://www.benbrittain.com/p2psatire"> blog post</a></span><br>';
+          messages.append(msg);
+          messages.scrollTop = 10000;
+          msg = '<span style="color:#0000FF;" padding-left: 15px"> \> otherwise, have fun with this p2p data channel! :)</a></span><br>';
+          messages.append(msg);
+          messages.scrollTop = 10000;
+
+        rtc.on('add remote stream', function(stream, socketId) {
+            if (!peer) {
+          var clone = cloneVideo('you', socketId);
+          document.getElementById("remote").setAttribute("class", "hiddenVideo");
+          rtc.attachStream(stream, "remote");
+          initCanvas("remote");
+          peer = true;
+
+          var messages = $("#datachannel");
+          msg = '<span style="color:#0000FF;" padding-left: 15px"> User connected </span><br>';
+          messages.append(msg);
+          messages.scrollTop = 10000;
+          $("#alert").text("Woah! you connected!").delay("1500");
+          $("#alert").fadeOut(function() {
+                $(this).text("Now type in that box!").fadeIn();
+          });
+      } 
+        });
+        rtc.on('disconnect stream', function(data) {
+            console.log('remove ' + data);
+            $("#remote").remove();
+            peer = false;
+          var messages = $("#datachannel");
+          msg = '<span style="color:#0000FF;" padding-left: 15px"> User disconnected </span><br>';
+          messages.append(msg);
+          messages.scrollTop = 10000;
+        });
+      }
+      
+  </script>
+
+  <div id = "videos">
+      <canvas id="qr-canvas" width="640" height="480" style="display:none"></canvas>
+  </div>
+
+  </body>
+</html>
+
